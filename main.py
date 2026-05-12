@@ -34,7 +34,12 @@ def slumpa_ansikte():
     """
     ogon_lista = ["o", "-", "^", "x", "T", ">", "@"]
     mun_lista = ["_", "o", "^", "x", "T"]
-    ram_lista = ["()", "[]", "{}", "<>", "()]", "[)"]
+    ram_lista = [
+        ("(", ")"),
+        ("[","]"),
+        ("{","}"),
+        ("<",">")
+    ]
 
     ogon = random.choice(ogon_lista)
     mun = random.choice(mun_lista)
@@ -80,23 +85,41 @@ def skriv_ut_animationskluster(bredd, hojd):
 
 ogon_alternativ = ["o", "-", "^", "x", "T", ">", "@"]
 mun_alternativ = ["_", "o", "^", "x", "T"]
-ram_alternativ = ["()", "[]", "{}", "<>", "()]", "[)"]
+
+ram_alternativ = [
+    ("(", ")"),
+    ("[", "]"),
+    ("{", "}"),
+    ("<", ">")
+]
 
 
-def hamta_heltal(text):
+def hamta_heltal(text, min_varde=None, max_varde=None):
     """
-    Säker input för heltal.
+    Hämtar ett giltigt heltal från användaren
     """
     while True:
         try:
-            return int(input(text))
+            tal = int(input(text))
+
+            if min_varde is not None and tal < min_varde:
+                print(f"Ogiltigt – ange minst {min_varde}.")
+                continue
+
+            if max_varde is not None and tal > max_varde:
+                print(f"Ogiltigt – ange högst {max_varde}.")
+                continue
+
+            return tal
+
         except ValueError:
-            print("Ogiltig input, skriv ett heltal.")
+            print("Ogiltigt – skriv ett heltal.")
 
 
 def skapa_eget_ansikte():
     """
-    Låter användaren designa ett eget ansikte.
+    Låter användaren designa ett eget ansikte genom menyval.
+    Skriver ut resultatet
     """
     print("\n--- VÄLJ ÖGON ---")
     for i, ogon in enumerate(ogon_alternativ, start=1):
@@ -144,6 +167,7 @@ def skapa_kluster():
     """
     Låter användaren skapa ett kluster.
     """
+
     print("\n1. Använd slumpat ansikte")
     print("2. Skapa eget ansikte")
 
@@ -178,8 +202,125 @@ def visa_slumpkluster():
     """
     Visar ett kluster med slumpade ansikten.
     """
-    bredd = hamta_heltal("Ange bredd: ")
-    hojd = hamta_heltal("Ange höjd: ")
+    bredd = hamta_heltal("Ange bredd: ", 1)
+    hojd = hamta_heltal("Ange höjd: ", 1)
 
     skriv_ut_slumpkluster(bredd, hojd)
 
+
+# === HUVUDPROGRAM ===
+
+def huvudprogram():
+    """
+    Huvudprogrammet som styr menyn och programflödet
+    """
+
+    while True:
+        print("\n--- ASCII-ANSIKTEN ---")
+        print("1. Skapa eget ansikte")
+        print("2. Skapa kluster")
+        print("3. Slumpat ansikte")
+        print("4. Slumpkluster")
+        print("5. Färgade ansikten")
+        print("6. Spara ansikte")
+        print("7. Visa sparade")
+        print("8. Animation")
+        print("9. Avsluta")
+
+        val = input("Välj: ")
+
+        if val == "1":
+            skapa_eget_ansikte()
+
+        elif val == "2":
+            skapa_kluster()
+
+        elif val == "3":
+            visa_slump_ansikte()
+
+        elif val == "4":
+            visa_slumpkluster()
+
+        elif val == "5":
+            visa_fargade_ansikten()
+
+        elif val == "6":
+            ansikte = skapa_eget_ansikte()
+            spara_ansikte_till_json(ansikte)
+            print("Ansiktet sparades")
+
+        elif val == "7":
+            visa_sparade()
+
+        elif val == "8":
+            bredd = hamta_heltal("Bredd: ", 1)
+            hojd = hamta_heltal("Höjd: ", 1)
+            skriv_ut_animationskluster(bredd, hojd)
+
+        elif val == "9":
+            print("Hej då!")
+            break
+
+        else:
+            print("Ogiltigt val")
+
+
+# === EXTRA FUNKTIONER FÖR UTMANINGAR ===
+
+def farglagg_ansikte(ansikte, farg):
+    return farg + ansikte + Farger.RESET
+
+
+def visa_fargade_ansikten():
+    farger = [
+        Farger.ROD,
+        Farger.GRON,
+        Farger.GUL,
+        Farger.BLA,
+        Farger.LILA,
+        Farger.CYAN
+    ]
+
+    print("\n--- FÄRGADE ANSIKTEN ---")
+
+    for _ in range(10):
+        print(farglagg_ansikte(slumpa_ansikte(), random.choice(farger)))
+
+
+def spara_ansikte_till_json(ansikte, fil="ansikten.json"):
+    """
+    Sparar ett ansikte till en JSON-fil
+    """
+
+    try:
+        with open(fil, "r") as f:
+            data = json.load(f)
+    except:
+        data = []
+
+    data.append(ansikte)
+
+    with open(fil, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+def visa_sparade():
+    """
+    Visar alla sparade ansikten
+    """
+
+    try:
+        with open("ansikten.json", "r") as f:
+            data = json.load(f)
+
+            print("\n--- SPARADE ANSIKTEN ---")
+
+            for ansikte in data:
+                print(ansikte)
+
+    except (FileNotFoundError, json.JSONDecodeError):
+        print("Inga sparade ansikten")
+
+
+if __name__ == "__main__":
+    huvudprogram()
